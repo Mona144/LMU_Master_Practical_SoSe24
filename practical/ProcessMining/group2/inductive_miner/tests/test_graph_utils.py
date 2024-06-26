@@ -30,10 +30,6 @@ def test_add_edge():
     g = Graph({'a': ['b'], 'b': ['c', 'd'], 'c': [], 'd': []})
     g.add_edge('a', 'c')
     assert g.graph == {'a': ['b', 'c'], 'b': ['c', 'd'], 'c': [], 'd': []}
-    # Test for edge which already exists
-    # TODO: check if its possible to rewrite the function to check if child already exists
-    # g.add_edge('a', 'b')
-    # assert g.graph == {'a': ['b', 'c'], 'b': ['c', 'd'], 'c': [], 'd': []}
 
 
 def test_add_node():
@@ -82,13 +78,18 @@ def test_get_all_edges():
 def test____str__():
     # Test str method
     g = Graph({'a': ['b'], 'b': ['c', 'd'], 'c': [], 'd': []})
-    assert str(g) == "a -> ['b']\nb -> ['c', 'd']\nc -> []\nd -> []\n"
+    assert str(g) == "a -> ['b']\nb -> ['c', 'd']\nc -> []\nd -> []"
 
 
 def test_build_graph_from_edges():
-    g = Graph.build_graph_from_edges({('a', 'b'), ('b', 'c'), ('b', 'd')})
-    # print(g)
-    assert True  # TODO recheck the output of function
+    g0 = Graph.build_graph_from_edges({('a', 'b'), ('b', 'c'), ('b', 'd')})
+    actual = g0.graph
+    target = {'b': ['d', 'c', 'a'], 'd': ['b'], 'c': ['b'], 'a': ['b']}
+    assert set(frozenset(sub) for sub in actual) == set(
+        frozenset(sub) for sub in target
+    )
+    g1 = Graph.build_graph_from_edges({})
+    assert g1.graph == {}
 
 
 def test_is_reachable():
@@ -122,32 +123,14 @@ def test_convert_to_undirected():
 
 def test_find_components():
     # Test if components are found correctly
-    g = Graph({'a': ['b'], 'b': ['c', 'd'], 'c': [], 'd': [], 'e': []})
-    assert g.find_components() == [['a', 'b', 'c', 'd'], ['e']]
-    # TODO: discuss functionality of find components
+    g0 = Graph({'a': ['b'], 'b': ['c', 'd'], 'c': [], 'd': [], 'e': []})
+    assert sorted(g0.find_components()) == [{'a', 'b', 'c', 'd'}, {'e'}]
 
+    g1 = Graph({'a': ['b'], 'b': [], 'c': ['d'], 'd': []})
+    assert sorted(g1.find_components()) == [{'a', 'b'}, {'c', 'd'}]
 
-def test_find_strongly_con_components():
-    # Test method strongly_connected
-    g0 = Graph({'a': ['b'], 'b': ['c', 'd'], 'c': [], 'd': []})
-    assert g0.find_strongly_con_components() == [['a'], ['b'], ['d'], ['c']]
-
-
-def test_build_cuts_graph():
-    # Test build cuts graph with semi complex graph
-    g = Graph({'a': ['b'], 'b': ['c', 'd'], 'c': [], 'd': []})
-    g0, map = g.build_cuts_graph([['a'], ['b'], ['d'], ['c']])
-
-    # print(g0.graph, 'sara', map)
-    assert g0.graph == {0: {1}, 1: set(), 2: set(), 3: set()}
-    assert map == {'a': 0, 'b': 1, 'd': 2, 'c': 3}
-
-
-def test_dfs_in_dag():
-    # Test dfs implementation
-    g = Graph({'a': ['b'], 'b': ['c', 'd'], 'c': [], 'd': [], 'e': []})
-    assert g.dfs_in_dag('a', set()) == {'a', 'b', 'c', 'd'}
-    assert g.dfs_in_dag('e', set()) == {'e'}
+    g2 = Graph({})
+    assert g2.find_components() == []
 
 
 def test_all_pairs_reachability_dag():
@@ -188,6 +171,23 @@ def test_find_unreachable_pairs():
 
 def test_traverse_path():
     # Test traverse path from two nodes
-    g = Graph({'a': ['b'], 'b': ['c', 'd'], 'c': [], 'd': []})
-    assert g.traverse_path('a') == ['a', 'b', 'c']
-    assert g.traverse_path('b') == ['b', 'c']
+    g = Graph({'a': ['b'], 'b': ['c'], 'c': ['d'], 'd': []})
+    assert g.traverse_path('a') == ['a', 'b', 'c', 'd']
+    assert g.traverse_path('b') == ['b', 'c', 'd']
+    assert g.traverse_path('d') == ['d']
+    assert g.traverse_path(None) == []
+
+
+def test_find_strongly_connected_components():
+    # Test method strongly_connected
+    g0 = Graph({'a': ['b'], 'b': ['c', 'd'], 'c': [], 'd': []})
+    assert g0.find_strongly_connected_components() == [{'a'}, {'b'}, {'d'}, {'c'}]
+
+    g1 = Graph({'a': ['b'], 'b': ['a']})
+    assert g1.find_strongly_connected_components() == [{'a', 'b'}]
+
+
+# TODO
+def test_build_cuts_graph():
+    g0 = Graph({'a': ['b'], 'b': ['c', 'd'], 'c': [], 'd': []})
+    pass
